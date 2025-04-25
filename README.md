@@ -4,6 +4,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 
+![image](https://github.com/user-attachments/assets/ef329d00-05a3-4d1e-ba4a-bba57bf7e337)
 
 
 A modern, feature-rich developer documentation tool that helps you organize and manage your technical notes with ease. Built with React and TypeScript, DevNotes provides a seamless experience for developers to document their work.
@@ -44,14 +45,6 @@ npm run dev
 ```
 
 4. Open [http://localhost:5173](http://localhost:5173) in your browser.
-
-## 🛠️ Development
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build |
 
 ## 🏗️ Tech Stack
 
