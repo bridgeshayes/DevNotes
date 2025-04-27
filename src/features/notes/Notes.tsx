@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -13,6 +14,7 @@ import {
   Menu,
   MenuItem,
   alpha,
+  Button,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -61,6 +63,7 @@ const mockNotes: Note[] = [
 ];
 
 const Notes = () => {
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -77,6 +80,10 @@ const Notes = () => {
     setSelectedTags(prev => 
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
     );
+  };
+
+  const handleNoteClick = (note: Note) => {
+    navigate(`/notes/${note.id}`, { state: { note } });
   };
 
   const filteredNotes = mockNotes
@@ -186,11 +193,17 @@ const Notes = () => {
                     display: 'flex',
                     flexDirection: 'column',
                     position: 'relative',
-                    overflow: 'visible'
+                    overflow: 'visible',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                    },
                   }}
+                  onClick={() => handleNoteClick(note)}
                 >
                   <CardContent sx={{ height: '100%', pt: 3 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                       <Typography variant="h6" sx={{ fontWeight: 600 }}>
                         {note.title}
                       </Typography>
@@ -240,10 +253,16 @@ const Notes = () => {
                     height: '100%',
                     display: 'flex',
                     flexDirection: 'column',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                    },
                   }}
+                  onClick={() => handleNoteClick(note)}
                 >
                   <CardContent sx={{ height: '100%' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                       <Typography variant="h6" sx={{ fontWeight: 600 }}>
                         {note.title}
                       </Typography>
@@ -294,6 +313,7 @@ const Notes = () => {
       <Fab
         color="primary"
         aria-label="add note"
+        onClick={() => navigate('/notes/new')}
         sx={{
           position: 'fixed',
           bottom: 32,

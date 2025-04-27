@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   AppBar,
@@ -30,9 +30,17 @@ import {
   GitHub as GitHubIcon,
   Notifications as NotificationsIcon,
   EmojiObjects as LightBulbIcon,
+  DarkMode as DarkModeIcon,
+  LightMode as LightModeIcon,
 } from '@mui/icons-material';
+import { useTheme as useAppTheme } from '../context/ThemeContext';
 
-const drawerWidth = 280;
+// Responsive drawer width
+const drawerWidth = {
+  xs: '100%',
+  sm: 200,
+  md: 240,
+};
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -42,8 +50,10 @@ const Layout = ({ children }: LayoutProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
   const navigate = useNavigate();
   const location = useLocation();
+  const { isDarkMode, toggleTheme } = useAppTheme();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -58,18 +68,18 @@ const Layout = ({ children }: LayoutProps) => {
 
   const bottomMenuItems = [
     { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
-    { text: 'GitHub', icon: <GitHubIcon />, path: 'https://github.com/yourusername/devnotes' },
+    { text: 'GitHub', icon: <GitHubIcon />, path: 'https://github.com' },
   ];
 
   const drawer = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Toolbar sx={{ px: 2, py: 3 }}>
+      <Toolbar sx={{ px: { xs: 2, sm: 2 }, py: { xs: 2, sm: 3 } }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Avatar
             sx={{
               background: 'linear-gradient(135deg, #00B6FF 0%, #FF4B8C 100%)',
-              width: 44,
-              height: 44,
+              width: { xs: 40, sm: 44 },
+              height: { xs: 40, sm: 44 },
               boxShadow: '0 8px 16px rgba(0, 182, 255, 0.25)',
               border: '2px solid #FFFFFF',
             }}
@@ -86,7 +96,7 @@ const Layout = ({ children }: LayoutProps) => {
           </Box>
         </Box>
       </Toolbar>
-      <Box sx={{ px: 2, py: 1 }}>
+      <Box sx={{ px: { xs: 2, sm: 2 }, py: { xs: 1, sm: 1 } }}>
         <Chip
           icon={<LightBulbIcon />}
           label="Pro Tips Enabled"
@@ -95,7 +105,7 @@ const Layout = ({ children }: LayoutProps) => {
         />
       </Box>
       <Divider sx={{ my: 1 }} />
-      <List sx={{ flex: 1, px: 2 }}>
+      <List sx={{ flex: 1, px: { xs: 1, sm: 2 } }}>
         {menuItems.map((item) => (
           <ListItem
             button
@@ -110,7 +120,7 @@ const Layout = ({ children }: LayoutProps) => {
             sx={{
               borderRadius: 3,
               mb: 1,
-              height: 48,
+              height: { xs: 44, sm: 48 },
               position: 'relative',
               overflow: 'visible',
               '&.Mui-selected': {
@@ -135,7 +145,7 @@ const Layout = ({ children }: LayoutProps) => {
           >
             <ListItemIcon
               sx={{
-                minWidth: 40,
+                minWidth: { xs: 36, sm: 40 },
                 color: location.pathname === item.path ? theme.palette.primary.main : theme.palette.text.secondary,
               }}
             >
@@ -145,6 +155,7 @@ const Layout = ({ children }: LayoutProps) => {
               primary={item.text}
               primaryTypographyProps={{
                 fontWeight: location.pathname === item.path ? 600 : 400,
+                fontSize: { xs: '0.9rem', sm: '1rem' },
               }}
             />
             {item.badge && (
@@ -156,6 +167,7 @@ const Layout = ({ children }: LayoutProps) => {
                   height: 20,
                   minWidth: 20,
                   borderRadius: '10px',
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
                 }}
               />
             )}
@@ -163,7 +175,7 @@ const Layout = ({ children }: LayoutProps) => {
         ))}
       </List>
       <Divider sx={{ my: 1 }} />
-      <List sx={{ px: 2 }}>
+      <List sx={{ px: { xs: 1, sm: 2 } }}>
         {bottomMenuItems.map((item) => (
           <ListItem
             button
@@ -181,12 +193,12 @@ const Layout = ({ children }: LayoutProps) => {
             sx={{
               borderRadius: 3,
               mb: 1,
-              height: 48,
+              height: { xs: 44, sm: 48 },
             }}
           >
             <ListItemIcon
               sx={{
-                minWidth: 40,
+                minWidth: { xs: 36, sm: 40 },
                 color: theme.palette.text.secondary,
               }}
             >
@@ -196,6 +208,7 @@ const Layout = ({ children }: LayoutProps) => {
               primary={item.text}
               primaryTypographyProps={{
                 color: theme.palette.text.secondary,
+                fontSize: { xs: '0.9rem', sm: '1rem' },
               }}
             />
           </ListItem>
@@ -210,16 +223,17 @@ const Layout = ({ children }: LayoutProps) => {
       <AppBar
         position="fixed"
         sx={{
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { sm: `${drawerWidth}px` },
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          width: { sm: `calc(100% - ${drawerWidth.sm}px)`, md: `calc(100% - ${drawerWidth.md}px)` },
+          ml: { sm: `${drawerWidth.sm}px`, md: `${drawerWidth.md}px` },
+          backgroundColor: isDarkMode ? 'rgba(19, 47, 76, 0.9)' : 'rgba(255, 255, 255, 0.9)',
           backdropFilter: 'blur(12px)',
-          color: 'text.primary',
+          color: isDarkMode ? '#E3F2FD' : '#2A3950',
           borderBottom: '1px solid',
-          borderColor: 'rgba(0, 182, 255, 0.1)',
+          borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 182, 255, 0.1)',
+          zIndex: theme.zIndex.drawer + 1,
         }}
       >
-        <Toolbar>
+        <Toolbar sx={{ minHeight: { xs: 56, sm: 64 } }}>
           <IconButton
             color="inherit"
             aria-label="open drawer"
@@ -229,46 +243,135 @@ const Layout = ({ children }: LayoutProps) => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 600, flexGrow: 1 }}>
-            {menuItems.find((item) => item.path === location.pathname)?.text || 'DevNotes'}
-          </Typography>
-          <Tooltip title="Notifications">
-            <IconButton 
-              color="inherit" 
+          <Box
+            sx={{
+              flexGrow: 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+            }}
+          >
+            <Typography 
+              variant="h6" 
+              noWrap 
+              component="div" 
               sx={{ 
-                ml: 1,
-                background: 'linear-gradient(135deg, rgba(0, 182, 255, 0.1) 0%, rgba(255, 75, 140, 0.1) 100%)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, rgba(0, 182, 255, 0.2) 0%, rgba(255, 75, 140, 0.2) 100%)',
-                }
+                fontWeight: 600,
+                fontSize: { xs: '1.1rem', sm: '1.25rem' },
+                color: isDarkMode ? '#E3F2FD' : '#2A3950',
+                letterSpacing: '-0.02em',
               }}
             >
-              <Badge badgeContent={3} color="secondary">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
-          </Tooltip>
+              {menuItems.find((item) => item.path === location.pathname)?.text || 'DevNotes'}
+            </Typography>
+            <Chip
+              label={menuItems.find((item) => item.path === location.pathname)?.text || 'Home'}
+              size="small"
+              sx={{
+                display: { xs: 'none', sm: 'flex' },
+                background: isDarkMode 
+                  ? 'rgba(255, 255, 255, 0.08)'
+                  : 'rgba(0, 182, 255, 0.08)',
+                color: isDarkMode ? '#E3F2FD' : '#2A3950',
+                fontWeight: 500,
+                fontSize: '0.75rem',
+                height: 24,
+                '& .MuiChip-label': {
+                  px: 1,
+                },
+              }}
+            />
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Tooltip title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}>
+              <IconButton 
+                color="inherit" 
+                onClick={toggleTheme}
+                sx={{ 
+                  background: isDarkMode 
+                    ? 'rgba(255, 255, 255, 0.08)'
+                    : 'rgba(0, 182, 255, 0.08)',
+                  '&:hover': {
+                    background: isDarkMode 
+                      ? 'rgba(255, 255, 255, 0.12)'
+                      : 'rgba(0, 182, 255, 0.12)',
+                  },
+                  width: { xs: 36, sm: 40 },
+                  height: { xs: 36, sm: 40 },
+                }}
+              >
+                {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Notifications">
+              <IconButton 
+                color="inherit" 
+                sx={{ 
+                  background: isDarkMode 
+                    ? 'rgba(255, 255, 255, 0.08)'
+                    : 'rgba(0, 182, 255, 0.08)',
+                  '&:hover': {
+                    background: isDarkMode 
+                      ? 'rgba(255, 255, 255, 0.12)'
+                      : 'rgba(0, 182, 255, 0.12)',
+                  },
+                  width: { xs: 36, sm: 40 },
+                  height: { xs: 36, sm: 40 },
+                }}
+              >
+                <Badge 
+                  badgeContent={3} 
+                  color="secondary"
+                  sx={{
+                    '& .MuiBadge-badge': {
+                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                      height: { xs: 16, sm: 20 },
+                      minWidth: { xs: 16, sm: 20 },
+                    }
+                  }}
+                >
+                  <NotificationsIcon sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }} />
+                </Badge>
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Toolbar>
       </AppBar>
       <Box
         component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+        sx={{ width: { sm: drawerWidth.sm, md: drawerWidth.md }, flexShrink: { sm: 0 } }}
       >
         <Drawer
-          variant={isMobile ? 'temporary' : 'permanent'}
-          open={isMobile ? mobileOpen : true}
+          variant="temporary"
+          open={mobileOpen}
           onClose={handleDrawerToggle}
           ModalProps={{
-            keepMounted: true,
+            keepMounted: true, // Better open performance on mobile.
           }}
           sx={{
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
-              width: drawerWidth,
-              borderRight: '1px solid rgba(0, 182, 255, 0.1)',
-              background: 'linear-gradient(180deg, #F0F7FF 0%, #FFFFFF 100%)',
+            display: { xs: 'block', sm: 'none' },
+            '& .MuiDrawer-paper': { 
+              boxSizing: 'border-box', 
+              width: drawerWidth.xs,
+              borderRight: '1px solid',
+              borderColor: 'rgba(0, 182, 255, 0.1)',
             },
           }}
+        >
+          {drawer}
+        </Drawer>
+        <Drawer
+          variant="permanent"
+          sx={{
+            display: { xs: 'none', sm: 'block' },
+            '& .MuiDrawer-paper': { 
+              boxSizing: 'border-box', 
+              width: { sm: drawerWidth.sm, md: drawerWidth.md },
+              borderRight: '1px solid',
+              borderColor: 'rgba(0, 182, 255, 0.1)',
+            },
+          }}
+          open
         >
           {drawer}
         </Drawer>
@@ -277,22 +380,24 @@ const Layout = ({ children }: LayoutProps) => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          mt: '64px',
-          backgroundColor: 'background.default',
-          minHeight: 'calc(100vh - 64px)',
-          position: 'relative',
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '240px',
-            background: 'linear-gradient(180deg, rgba(0, 182, 255, 0.08) 0%, rgba(255, 75, 140, 0.08) 100%)',
-            zIndex: -1,
+          p: { xs: 2, sm: 3 },
+          width: { 
+            xs: '100%',
+            sm: `calc(100% - 40px)`, 
+            md: `calc(100% - 40px)` 
           },
+          ml: { sm: '40px', md: '40px' },
+          mt: { xs: '56px', sm: '64px' },
+          height: `calc(100vh - ${isMobile ? '56px' : '64px'})`,
+          overflow: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          '& > *': {
+            width: '100%',
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column'
+          }
         }}
       >
         {children}

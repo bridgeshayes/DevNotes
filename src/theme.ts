@@ -1,8 +1,8 @@
-import { createTheme } from '@mui/material/styles';
+import { createTheme, ThemeOptions } from '@mui/material/styles';
 
-const theme = createTheme({
+const getThemeOptions = (mode: 'light' | 'dark'): ThemeOptions => ({
   palette: {
-    mode: 'light',
+    mode,
     primary: {
       main: '#00B6FF',
       light: '#4DCFFF',
@@ -16,12 +16,12 @@ const theme = createTheme({
       contrastText: '#ffffff',
     },
     background: {
-      default: '#F0F7FF',
-      paper: '#ffffff',
+      default: mode === 'light' ? '#F0F7FF' : '#0A1929',
+      paper: mode === 'light' ? '#ffffff' : '#132F4C',
     },
     text: {
-      primary: '#2A3950',
-      secondary: '#566584',
+      primary: mode === 'light' ? '#2A3950' : '#E3F2FD',
+      secondary: mode === 'light' ? '#566584' : '#B0BEC5',
     },
     error: {
       main: '#FF3B30',
@@ -108,10 +108,14 @@ const theme = createTheme({
         },
         contained: {
           background: 'linear-gradient(45deg, #00B6FF 0%, #FF4B8C 180%)',
-          boxShadow: '0 4px 14px rgba(0, 182, 255, 0.25)',
+          boxShadow: mode === 'light' 
+            ? '0 4px 14px rgba(0, 182, 255, 0.25)'
+            : '0 4px 14px rgba(0, 182, 255, 0.15)',
           '&:hover': {
             background: 'linear-gradient(45deg, #00A1E6 0%, #E6437D 180%)',
-            boxShadow: '0 6px 20px rgba(0, 182, 255, 0.35)',
+            boxShadow: mode === 'light'
+              ? '0 6px 20px rgba(0, 182, 255, 0.35)'
+              : '0 6px 20px rgba(0, 182, 255, 0.25)',
             transform: 'translateY(-2px)',
           },
         },
@@ -120,7 +124,9 @@ const theme = createTheme({
           borderColor: '#00B6FF',
           '&:hover': {
             borderWidth: '2px',
-            background: 'rgba(0, 182, 255, 0.04)',
+            background: mode === 'light'
+              ? 'rgba(0, 182, 255, 0.04)'
+              : 'rgba(0, 182, 255, 0.08)',
             transform: 'translateY(-2px)',
           },
         },
@@ -130,14 +136,22 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 24,
-          background: '#FFFFFF',
-          boxShadow: '0 8px 24px rgba(0, 182, 255, 0.12)',
+          background: mode === 'light' ? '#FFFFFF' : '#132F4C',
+          boxShadow: mode === 'light'
+            ? '0 8px 24px rgba(0, 182, 255, 0.12)'
+            : '0 8px 24px rgba(0, 0, 0, 0.2)',
           transition: 'all 0.3s ease-in-out',
-          border: '1px solid rgba(0, 182, 255, 0.08)',
+          border: mode === 'light'
+            ? '1px solid rgba(0, 182, 255, 0.08)'
+            : '1px solid rgba(255, 255, 255, 0.08)',
           '&:hover': {
             transform: 'translateY(-4px)',
-            boxShadow: '0 20px 40px rgba(0, 182, 255, 0.2)',
-            border: '1px solid rgba(0, 182, 255, 0.2)',
+            boxShadow: mode === 'light'
+              ? '0 20px 40px rgba(0, 182, 255, 0.2)'
+              : '0 20px 40px rgba(0, 0, 0, 0.3)',
+            border: mode === 'light'
+              ? '1px solid rgba(0, 182, 255, 0.2)'
+              : '1px solid rgba(255, 255, 255, 0.12)',
           },
         },
       },
@@ -186,18 +200,28 @@ const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          boxShadow: '0 4px 20px rgba(0, 182, 255, 0.1)',
+          boxShadow: mode === 'light'
+            ? '0 4px 20px rgba(0, 182, 255, 0.1)'
+            : '0 4px 20px rgba(0, 0, 0, 0.2)',
           backdropFilter: 'blur(12px)',
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-          borderBottom: '1px solid rgba(0, 182, 255, 0.1)',
+          backgroundColor: mode === 'light'
+            ? 'rgba(255, 255, 255, 0.9)'
+            : 'rgba(19, 47, 76, 0.9)',
+          borderBottom: mode === 'light'
+            ? '1px solid rgba(0, 182, 255, 0.1)'
+            : '1px solid rgba(255, 255, 255, 0.08)',
         },
       },
     },
     MuiDrawer: {
       styleOverrides: {
         paper: {
-          borderRight: '1px solid rgba(0, 182, 255, 0.1)',
-          background: 'linear-gradient(180deg, #F0F7FF 0%, #FFFFFF 100%)',
+          borderRight: mode === 'light'
+            ? '1px solid rgba(0, 182, 255, 0.1)'
+            : '1px solid rgba(255, 255, 255, 0.08)',
+          background: mode === 'light'
+            ? 'linear-gradient(180deg, #F0F7FF 0%, #FFFFFF 100%)'
+            : 'linear-gradient(180deg, #0A1929 0%, #132F4C 100%)',
         },
       },
     },
@@ -208,13 +232,19 @@ const theme = createTheme({
           marginBottom: '8px',
           transition: 'all 0.2s ease-in-out',
           '&:hover': {
-            backgroundColor: 'rgba(0, 182, 255, 0.06)',
+            backgroundColor: mode === 'light'
+              ? 'rgba(0, 182, 255, 0.06)'
+              : 'rgba(255, 255, 255, 0.04)',
             transform: 'translateX(4px)',
           },
           '&.Mui-selected': {
-            backgroundColor: 'rgba(0, 182, 255, 0.1)',
+            backgroundColor: mode === 'light'
+              ? 'rgba(0, 182, 255, 0.1)'
+              : 'rgba(255, 255, 255, 0.08)',
             '&:hover': {
-              backgroundColor: 'rgba(0, 182, 255, 0.15)',
+              backgroundColor: mode === 'light'
+                ? 'rgba(0, 182, 255, 0.15)'
+                : 'rgba(255, 255, 255, 0.12)',
             },
           },
         },
@@ -223,4 +253,7 @@ const theme = createTheme({
   },
 });
 
-export default theme; 
+export const lightTheme = createTheme(getThemeOptions('light'));
+export const darkTheme = createTheme(getThemeOptions('dark'));
+
+export default lightTheme; 

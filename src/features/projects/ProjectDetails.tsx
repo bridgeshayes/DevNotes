@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -36,6 +36,7 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useNavigate, useParams } from 'react-router-dom';
+import MarkdownEditor from '../../components/MarkdownEditor';
 
 interface Project {
   id: number;
@@ -465,47 +466,33 @@ All errors follow this format:
 ];
 
 const ProjectDetails = () => {
-  const navigate = useNavigate();
   const { id } = useParams();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [selectedNote, setSelectedNote] = useState<Project['notes'][0] | null>(null);
+  const navigate = useNavigate();
+  const [project, setProject] = useState<Project | undefined>(
+    mockProjects.find((p) => p.id === Number(id))
+  );
   const [isEditing, setIsEditing] = useState(false);
-  const [editContent, setEditContent] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedNote, setSelectedNote] = useState<Project['notes'][0] | null>(null);
   const [isCreatingNote, setIsCreatingNote] = useState(false);
   const [newNoteTitle, setNewNoteTitle] = useState('');
-
-  // Find the project based on the ID from the URL
-  const project = mockProjects.find(p => p.id === Number(id));
+  const [newNoteContent, setNewNoteContent] = useState('');
 
   if (!project) {
     return (
       <Box sx={{ p: 3 }}>
-        <Typography variant="h5" color="error">
-          Project not found
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/projects')}
-          sx={{ mt: 2 }}
-        >
-          Back to Projects
-        </Button>
+        <Typography>Project not found</Typography>
       </Box>
     );
   }
 
   const handleTagClick = (tag: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-    );
+    // Handle tag click
   };
 
   const handleNoteClick = (note: Project['notes'][0]) => {
-    setSelectedNote(note);
-    setEditContent(note.content);
-    setIsEditing(false);
+    navigate(`/notes/${note.id}`, { state: { note } });
   };
 
   const handleEdit = () => {
@@ -513,391 +500,296 @@ const ProjectDetails = () => {
   };
 
   const handleSave = () => {
-    if (selectedNote) {
-      // Here you would typically save to your backend
-      const updatedNote = {
-        ...selectedNote,
-        content: editContent,
-        updatedAt: new Date().toISOString(),
-      };
-      setSelectedNote(updatedNote);
-      setIsEditing(false);
-    }
+    setIsEditing(false);
+    // Save changes
   };
 
   const handleCreateNote = () => {
     setIsCreatingNote(true);
-    setNewNoteTitle('');
-    setEditContent('');
   };
 
   const handleSaveNewNote = () => {
-    if (newNoteTitle.trim()) {
-      // Here you would typically save to your backend
-      const newNote = {
-        id: Date.now(), // Temporary ID
-        title: newNoteTitle,
-        content: editContent,
-        createdAt: new Date().toISOString(),
+    // Save new note
+    setIsCreatingNote(false);
+    setNewNoteTitle('');
+    setNewNoteContent('');
+  };
+
+  const handleNoteSave = (content: string) => {
+    if (selectedNote) {
+      const updatedNote = {
+        ...selectedNote,
+        content,
         updatedAt: new Date().toISOString(),
       };
-      setSelectedNote(newNote);
-      setIsCreatingNote(false);
+      setSelectedNote(updatedNote);
+      // Here you would typically save to your backend
     }
   };
 
-  const filteredNotes = project.notes
-    .filter(note =>
-      note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      note.content.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    .filter(note =>
-      selectedTags.length === 0 || project.tags.some(tag => selectedTags.includes(tag))
-    );
-
-  // Get unique tags from project
-  const allTags = Array.from(new Set(project.tags));
+  const handleNoteTitleChange = (title: string) => {
+    if (selectedNote) {
+      const updatedNote = {
+        ...selectedNote,
+        title,
+        updatedAt: new Date().toISOString(),
+      };
+      setSelectedNote(updatedNote);
+      // Here you would typically save to your backend
+    }
+  };
 
   return (
-    <Box sx={{ height: '100%', position: 'relative' }}>
-      {/* Header Section */}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          mb: 4,
-          gap: 2,
-          flexWrap: 'wrap',
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <IconButton onClick={() => navigate('/projects')}>
-            <ArrowBackIcon />
-          </IconButton>
-          <Box>
-            <Typography variant="h4" sx={{ fontWeight: 700 }}>
-              {project.title}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {project.description}
-            </Typography>
-          </Box>
-        </Box>
-        
-        {/* Search and Filter Bar */}
-        <Box sx={{ 
-          display: 'flex', 
-          gap: 2,
-          flex: 1,
-          maxWidth: 600,
-          background: theme => alpha(theme.palette.primary.main, 0.04),
-          borderRadius: 3,
-          p: 1,
-        }}>
-          <Box sx={{ 
-            display: 'flex',
-            alignItems: 'center',
-            flex: 1,
-            gap: 1,
-          }}>
-            <SearchIcon sx={{ color: 'text.secondary' }} />
-            <InputBase
-              placeholder="Search notes..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              sx={{ flex: 1 }}
-            />
-          </Box>
-        </Box>
-      </Box>
-
-      {/* Project Info */}
-      <Card sx={{ mb: 4 }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Project Details
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              {project.isStarred && (
-                <Tooltip title="Starred Project">
-                  <IconButton size="small">
-                    <StarIcon sx={{ color: 'warning.main' }} />
-                  </IconButton>
-                </Tooltip>
-              )}
-              <IconButton size="small">
-                <MoreVertIcon />
-              </IconButton>
-            </Box>
-          </Box>
-
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-            {project.description}
-          </Typography>
-
-          <Box sx={{ mb: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="caption" color="text.secondary">
-                Progress
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {project.progress}%
-              </Typography>
-            </Box>
-            <LinearProgress
-              variant="determinate"
-              value={project.progress}
-              sx={{
-                height: 6,
-                borderRadius: 3,
-                bgcolor: alpha(statusColors[project.status], 0.1),
-                '& .MuiLinearProgress-bar': {
-                  bgcolor: statusColors[project.status],
-                },
-              }}
-            />
-          </Box>
-
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <TeamIcon sx={{ color: 'text.secondary', mr: 1, fontSize: 20 }} />
-              <AvatarGroup max={3} sx={{ '& .MuiAvatar-root': { width: 24, height: 24, fontSize: '0.875rem' } }}>
-                {project.team.map((member, index) => (
-                  <Tooltip key={index} title={member.name}>
-                    <Avatar alt={member.name} src={member.avatar} />
-                  </Tooltip>
-                ))}
-              </AvatarGroup>
-            </Box>
-            <Chip
-              label={project.status}
-              size="small"
-              sx={{
-                borderRadius: 1.5,
-                bgcolor: alpha(statusColors[project.status], 0.1),
-                color: statusColors[project.status],
-              }}
-            />
-          </Box>
-
-          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-            {project.tags.map(tag => (
-              <Chip
-                key={tag}
-                label={tag}
-                size="small"
-                sx={{ borderRadius: 1.5 }}
-              />
-            ))}
-          </Box>
-        </CardContent>
-      </Card>
-
-      {/* Tags Section */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary', fontWeight: 500 }}>
-          Tags
+    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+        <IconButton onClick={() => navigate('/projects')} sx={{ display: { xs: 'flex', sm: 'none' } }}>
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography variant="h4" sx={{ fontSize: { xs: '1.5rem', sm: '2rem' }, fontWeight: 600 }}>
+          {project.title}
         </Typography>
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-          {allTags.map(tag => (
-            <Chip
-              key={tag}
-              label={tag}
-              onClick={() => handleTagClick(tag)}
-              color={selectedTags.includes(tag) ? 'primary' : 'default'}
-              sx={{
-                borderRadius: 2,
-                '& .MuiChip-icon': {
-                  color: selectedTags.includes(tag) ? 'inherit' : 'text.secondary',
-                },
-              }}
-            />
-          ))}
-        </Box>
+        <Box sx={{ flexGrow: 1 }} />
+        <IconButton
+          onClick={() => setProject({ ...project, isStarred: !project.isStarred })}
+          sx={{ color: project.isStarred ? 'warning.main' : 'inherit' }}
+        >
+          <StarIcon />
+        </IconButton>
       </Box>
 
-      {/* Main Content */}
       <Grid container spacing={3}>
-        {/* Notes List */}
-        <Grid xs={12} md={4}>
-          <Card sx={{ height: 'calc(100vh - 200px)', overflow: 'auto' }}>
+        <Grid item xs={12} md={8}>
+          <Card sx={{ mb: 3 }}>
             <CardContent>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  Notes
-                </Typography>
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={handleCreateNote}
-                  size="small"
-                >
-                  New Note
-                </Button>
-              </Box>
-              {filteredNotes.map(note => (
-                <Card
-                  key={note.id}
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Chip
+                  label={project.status}
                   sx={{
-                    mb: 2,
+                    backgroundColor: alpha(statusColors[project.status], 0.1),
+                    color: statusColors[project.status],
+                    fontWeight: 600,
+                  }}
+                />
+                <Box sx={{ flexGrow: 1 }} />
+                <Button
+                  variant="outlined"
+                  startIcon={<EditIcon />}
+                  onClick={handleEdit}
+                  sx={{ display: { xs: 'none', sm: 'flex' } }}
+                >
+                  Edit Project
+                </Button>
+                <IconButton onClick={handleEdit} sx={{ display: { xs: 'flex', sm: 'none' } }}>
+                  <EditIcon />
+                </IconButton>
+              </Box>
+
+              <Typography variant="body1" sx={{ mb: 3, color: 'text.secondary' }}>
+                {project.description}
+              </Typography>
+
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                  Progress
+                </Typography>
+                <LinearProgress
+                  variant="determinate"
+                  value={project.progress}
+                  sx={{
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: alpha(statusColors[project.status], 0.1),
+                    '& .MuiLinearProgress-bar': {
+                      backgroundColor: statusColors[project.status],
+                    },
+                  }}
+                />
+                <Typography variant="caption" sx={{ mt: 1, color: 'text.secondary' }}>
+                  {project.progress}% Complete
+                </Typography>
+              </Box>
+
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                  Team Members
+                </Typography>
+                <AvatarGroup max={4} sx={{ '& .MuiAvatar-root': { width: 32, height: 32 } }}>
+                  {project.team.map((member) => (
+                    <Avatar key={member.name} src={member.avatar} alt={member.name} />
+                  ))}
+                </AvatarGroup>
+              </Box>
+
+              <Box>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                  Tags
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {project.tags.map((tag) => (
+                    <Chip
+                      key={tag}
+                      label={tag}
+                      onClick={() => handleTagClick(tag)}
+                      sx={{ backgroundColor: alpha('#00B6FF', 0.1) }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+
+          <Box sx={{ mb: 3, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+            <Box
+              sx={{
+                flexGrow: 1,
+                display: 'flex',
+                alignItems: 'center',
+                backgroundColor: 'background.paper',
+                borderRadius: 2,
+                px: 2,
+                py: 1,
+                border: '1px solid',
+                borderColor: 'divider',
+              }}
+            >
+              <SearchIcon sx={{ color: 'text.secondary', mr: 1 }} />
+              <InputBase
+                placeholder="Search notes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                sx={{ flexGrow: 1 }}
+              />
+            </Box>
+            <IconButton
+              onClick={(e) => setFilterAnchorEl(e.currentTarget)}
+              sx={{
+                backgroundColor: 'background.paper',
+                border: '1px solid',
+                borderColor: 'divider',
+              }}
+            >
+              <FilterIcon />
+            </IconButton>
+          </Box>
+
+          <Grid container spacing={2}>
+            {project.notes.map((note) => (
+              <Grid item xs={12} sm={6} key={note.id}>
+                <Card
+                  sx={{
+                    height: '100%',
                     cursor: 'pointer',
-                    bgcolor: selectedNote?.id === note.id ? 'action.selected' : 'background.paper',
+                    transition: 'transform 0.2s',
                     '&:hover': {
-                      bgcolor: 'action.hover',
+                      transform: 'translateY(-4px)',
                     },
                   }}
                   onClick={() => handleNoteClick(note)}
                 >
                   <CardContent>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                    <Typography variant="h6" sx={{ mb: 1, fontSize: { xs: '1rem', sm: '1.1rem' } }}>
                       {note.title}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: 'text.secondary',
+                        mb: 2,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {note.content}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                       Last updated: {new Date(note.updatedAt).toLocaleDateString()}
                     </Typography>
                   </CardContent>
                 </Card>
-              ))}
-            </CardContent>
-          </Card>
+              </Grid>
+            ))}
+          </Grid>
         </Grid>
 
-        {/* Editor/Viewer */}
-        <Grid xs={12} md={8}>
-          <Card sx={{ height: 'calc(100vh - 200px)', overflow: 'auto' }}>
+        <Grid item xs={12} md={4}>
+          <Card sx={{ position: { xs: 'fixed', sm: 'sticky' }, top: { xs: 'auto', sm: 88 }, bottom: { xs: 0, sm: 'auto' }, left: { xs: 0, sm: 'auto' }, right: { xs: 0, sm: 'auto' }, width: { xs: '100%', sm: 'auto' }, zIndex: 1000, borderRadius: { xs: '16px 16px 0 0', sm: 2 } }}>
             <CardContent>
-              {isCreatingNote ? (
-                <>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                    <TextField
-                      placeholder="Note Title"
-                      value={newNoteTitle}
-                      onChange={(e) => setNewNoteTitle(e.target.value)}
-                      variant="outlined"
-                      fullWidth
-                      sx={{ mr: 2 }}
-                    />
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Tooltip title="Save">
-                        <IconButton onClick={handleSaveNewNote}>
-                          <SaveIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <IconButton onClick={() => setIsCreatingNote(false)}>
-                        <MoreVertIcon />
-                      </IconButton>
-                    </Box>
-                  </Box>
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={20}
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                    variant="outlined"
-                    placeholder="Write your note in markdown..."
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        fontFamily: 'monospace',
-                      },
-                    }}
-                  />
-                </>
-              ) : selectedNote ? (
-                <>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                    <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                      {selectedNote.title}
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      {isEditing ? (
-                        <Tooltip title="Save">
-                          <IconButton onClick={handleSave}>
-                            <SaveIcon />
-                          </IconButton>
-                        </Tooltip>
-                      ) : (
-                        <Tooltip title="Edit">
-                          <IconButton onClick={handleEdit}>
-                            <EditIcon />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                      <IconButton>
-                        <MoreVertIcon />
-                      </IconButton>
-                    </Box>
-                  </Box>
-                  {isEditing ? (
-                    <TextField
-                      fullWidth
-                      multiline
-                      rows={20}
-                      value={editContent}
-                      onChange={(e) => setEditContent(e.target.value)}
-                      variant="outlined"
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          fontFamily: 'monospace',
-                        },
-                      }}
-                    />
-                  ) : (
-                    <Box sx={{ 
-                      '& pre': { 
-                        backgroundColor: '#1E1E1E',
-                        borderRadius: 1,
-                        padding: 2,
-                        overflow: 'auto',
-                      },
-                      '& code': {
-                        fontFamily: 'monospace',
-                      },
-                    }}>
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        components={{
-                          code({ node, inline, className, children, ...props }) {
-                            const match = /language-(\w+)/.exec(className || '');
-                            return !inline && match ? (
-                              <SyntaxHighlighter
-                                style={atomDark}
-                                language={match[1]}
-                                PreTag="div"
-                                {...props}
-                              >
-                                {String(children).replace(/\n$/, '')}
-                              </SyntaxHighlighter>
-                            ) : (
-                              <code className={className} {...props}>
-                                {children}
-                              </code>
-                            );
-                          },
-                        }}
-                      >
-                        {selectedNote.content}
-                      </ReactMarkdown>
-                    </Box>
-                  )}
-                </>
-              ) : (
-                <Box sx={{ 
-                  height: '100%', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  color: 'text.secondary',
-                }}>
-                  <Typography>Select a note to view or edit</Typography>
-                </Box>
-              )}
+              <Typography variant="h6" sx={{ mb: 2, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+                Project Details
+              </Typography>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 0.5 }}>
+                  Due Date
+                </Typography>
+                <Typography variant="body1">
+                  {new Date(project.dueDate).toLocaleDateString()}
+                </Typography>
+              </Box>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 0.5 }}>
+                  Status
+                </Typography>
+                <Typography variant="body1" sx={{ color: statusColors[project.status] }}>
+                  {project.status}
+                </Typography>
+              </Box>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 0.5 }}>
+                  Team Size
+                </Typography>
+                <Typography variant="body1">{project.team.length} members</Typography>
+              </Box>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleCreateNote}
+                fullWidth
+                sx={{ mt: 2 }}
+              >
+                Add Note
+              </Button>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
+
+      <Menu
+        anchorEl={filterAnchorEl}
+        open={Boolean(filterAnchorEl)}
+        onClose={() => setFilterAnchorEl(null)}
+      >
+        <MenuItem>All Notes</MenuItem>
+        <MenuItem>Recent</MenuItem>
+        <MenuItem>Starred</MenuItem>
+      </Menu>
+
+      {selectedNote && (
+        <Card sx={{ mt: 3, height: 'calc(100vh - 300px)' }}>
+          <Box sx={{ p: 3 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              {selectedNote.title}
+            </Typography>
+            <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+              {selectedNote.content}
+            </Typography>
+          </Box>
+        </Card>
+      )}
+
+      {isCreatingNote && (
+        <Card sx={{ mt: 3, height: 'calc(100vh - 300px)' }}>
+          <Box sx={{ p: 3 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              New Note
+            </Typography>
+            <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+              Click on a note to edit it in the markdown editor.
+            </Typography>
+          </Box>
+        </Card>
+      )}
     </Box>
   );
 };
